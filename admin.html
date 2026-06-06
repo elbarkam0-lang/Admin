@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة التحكم الجبارة | إدارة الطلبات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background: #edf2f7; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+        .order-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-right: 5px solid #e74c3c; }
+        .order-header { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .item-list { margin: 10px 0; padding-right: 20px; }
+        .total { font-weight: bold; color: #e74c3c; font-size: 1.2em; }
+        .btn-done { background: #27ae60; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-family: 'Cairo'; font-weight: bold; }
+        .btn-done:hover { background: #219150; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>📦 الطلبات الجديدة</h1>
+        <div id="statusIndicator">جاري المراقبة...</div>
+    </div>
+
+    <div class="order-grid" id="orderGrid">
+        <!-- الطلبات هتظهر هنا تلقائياً -->
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLOsW830rHo7viYDAUehbTkfmBLAiGCg8",
+            authDomain: "haaaaa-7e537.firebaseapp.com",
+            projectId: "haaaaa-7e537",
+            storageBucket: "haaaaa-7e537.firebasestorage.app",
+            messagingSenderId: "874151449512",
+            appId: "1:874151449512:web:32867d7d7e33170679839d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // الاستماع لجدول الطلبات
+        onSnapshot(collection(db, "orders"), (snapshot) => {
+            const grid = document.getElementById('orderGrid');
+            grid.innerHTML = '';
+            
+            if (snapshot.empty) {
+                grid.innerHTML = '<h2>لا توجد طلبات حالياً</h2>';
+                return;
+            }
+
+            snapshot.forEach((docSnapshot) => {
+                const order = docSnapshot.data();
+                const id = docSnapshot.id;
+                
+                let itemsHtml = order.items.map(i => `<li>${i.title}</li>`).join('');
+
+                grid.innerHTML += `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <strong>${order.customerName}</strong>
+                            <span>${new Date(order.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                        <p>📍 ${order.customerAddress}</p>
+                        <p>📞 ${order.customerPhone}</p>
+                        <ul class="item-list">${itemsHtml}</ul>
+                        <p class="total">الإجمالي: ${order.totalPrice} ج.م</p>
+                        <button class="btn-done" onclick="markAsDone('${id}')">تم التوصيل (إزالة الطلب)</button>
+                    </div>
+                `;
+            });
+        });
+
+        // دالة حذف الطلب بعد تنفيذه
+        window.markAsDone = async (id) => {
+            if(confirm("هل تم توصيل الطلب فعلاً؟")) {
+                await deleteDoc(doc(db, "orders", id));
+            }
+        };
+    </script>
+</body>
+</html>
