@@ -2,86 +2,113 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة التحكم الجبارة | إدارة الطلبات</title>
+    <title>لوحة التحكم العالمية | مطعم البركة</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Cairo', sans-serif; background: #edf2f7; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
-        .order-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-right: 5px solid #e74c3c; }
-        .order-header { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .item-list { margin: 10px 0; padding-right: 20px; }
-        .total { font-weight: bold; color: #e74c3c; font-size: 1.2em; }
-        .btn-done { background: #27ae60; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-family: 'Cairo'; font-weight: bold; }
-        .btn-done:hover { background: #219150; }
+        body { font-family: 'Cairo', sans-serif; background: #f4f7f6; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px; box-sizing: border-box; }
+        .btn { padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; width: 100%; margin-top: 10px; }
+        .btn-save { background: #27ae60; }
+        .order-card { background: #fff; padding: 15px; border-radius: 10px; border-right: 5px solid #e74c3c; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>📦 الطلبات الجديدة</h1>
-        <div id="statusIndicator">جاري المراقبة...</div>
+<div class="container">
+    <div class="card">
+        <h2><i class="fa-solid fa-plus"></i> إضافة وجبة جديدة (للمنيو)</h2>
+        <div class="form-grid">
+            <input type="text" id="title" placeholder="اسم الوجبة (مثلاً: سندوتش شاورما)">
+            <input type="number" id="price" placeholder="السعر">
+            <select id="category">
+                <option value="سندوتشات">سندوتشات</option>
+                <option value="وجبات">وجبات</option>
+                <option value="مقبلات">مقبلات</option>
+            </select>
+            <input type="file" id="imageInput" accept="image/*">
+        </div>
+        <div style="background: #fff3cd; padding: 10px; margin-top: 10px; border-radius: 8px;">
+            <label><input type="checkbox" id="isOffer"> عرض لفترة محدودة؟</label>
+            <div id="offerFields" style="display:none; margin-top:10px;">
+                <input type="number" id="offerPrice" placeholder="السعر بعد الخصم">
+                <input type="number" id="duration" placeholder="عدد ساعات العرض">
+            </div>
+        </div>
+        <button class="btn btn-save" onclick="saveItem()">حفظ الوجبة</button>
     </div>
 
-    <div class="order-grid" id="orderGrid">
-        <!-- الطلبات هتظهر هنا تلقائياً -->
+    <div class="card">
+        <h2><i class="fa-solid fa-bell"></i> الطلبات الجديدة</h2>
+        <div id="orderGrid"></div>
     </div>
+</div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDLOsW830rHo7viYDAUehbTkfmBLAiGCg8",
-            authDomain: "haaaaa-7e537.firebaseapp.com",
-            projectId: "haaaaa-7e537",
-            storageBucket: "haaaaa-7e537.firebasestorage.app",
-            messagingSenderId: "874151449512",
-            appId: "1:874151449512:web:32867d7d7e33170679839d"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLOsW830rHo7viYDAUehbTkfmBLAiGCg8",
+        authDomain: "haaaaa-7e537.firebaseapp.com",
+        projectId: "haaaaa-7e537",
+        storageBucket: "haaaaa-7e537.firebasestorage.app",
+        messagingSenderId: "874151449512",
+        appId: "1:874151449512:web:32867d7d7e33170679839d"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        // الاستماع لجدول الطلبات
-        onSnapshot(collection(db, "orders"), (snapshot) => {
-            const grid = document.getElementById('orderGrid');
-            grid.innerHTML = '';
-            
-            if (snapshot.empty) {
-                grid.innerHTML = '<h2>لا توجد طلبات حالياً</h2>';
-                return;
-            }
+    // Toggle Offer Fields
+    document.getElementById('isOffer').onchange = (e) => {
+        document.getElementById('offerFields').style.display = e.target.checked ? 'block' : 'none';
+    };
 
-            snapshot.forEach((docSnapshot) => {
-                const order = docSnapshot.data();
-                const id = docSnapshot.id;
-                
-                let itemsHtml = order.items.map(i => `<li>${i.title}</li>`).join('');
+    // Save Item
+    window.saveItem = async () => {
+        const file = document.getElementById('imageInput').files[0];
+        if (!file) { alert("من فضلك اختر صورة"); return; }
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            const isOffer = document.getElementById('isOffer').checked;
+            const hours = parseInt(document.getElementById('duration').value) || 0;
+            const expiry = new Date(); expiry.setHours(expiry.getHours() + hours);
 
-                grid.innerHTML += `
-                    <div class="order-card">
-                        <div class="order-header">
-                            <strong>${order.customerName}</strong>
-                            <span>${new Date(order.timestamp).toLocaleTimeString()}</span>
-                        </div>
-                        <p>📍 ${order.customerAddress}</p>
-                        <p>📞 ${order.customerPhone}</p>
-                        <ul class="item-list">${itemsHtml}</ul>
-                        <p class="total">الإجمالي: ${order.totalPrice} ج.م</p>
-                        <button class="btn-done" onclick="markAsDone('${id}')">تم التوصيل (إزالة الطلب)</button>
-                    </div>
-                `;
+            await addDoc(collection(db, "menu"), {
+                title: document.getElementById('title').value,
+                price: document.getElementById('price').value,
+                category: document.getElementById('category').value,
+                image: reader.result,
+                isOffer: isOffer,
+                offerPrice: isOffer ? document.getElementById('offerPrice').value : null,
+                offerExpiry: isOffer ? expiry.toISOString() : null
             });
-        });
-
-        // دالة حذف الطلب بعد تنفيذه
-        window.markAsDone = async (id) => {
-            if(confirm("هل تم توصيل الطلب فعلاً؟")) {
-                await deleteDoc(doc(db, "orders", id));
-            }
+            alert("تم حفظ الوجبة!");
         };
-    </script>
+    };
+
+    // Real-time Orders
+    onSnapshot(collection(db, "orders"), (snapshot) => {
+        const grid = document.getElementById('orderGrid');
+        grid.innerHTML = '';
+        snapshot.forEach(d => {
+            const o = d.data();
+            grid.innerHTML += `
+                <div class="order-card">
+                    <strong>${o.customerName}</strong> - ${o.customerPhone}
+                    <p>${o.customerAddress}</p>
+                    <p>الإجمالي: ${o.totalPrice} ج.م</p>
+                    <button class="btn" style="background:#e74c3c" onclick="deleteDoc(doc(db, 'orders', '${d.id}'))">تم التوصيل</button>
+                </div>
+            `;
+        });
+    });
+</script>
 </body>
 </html>
