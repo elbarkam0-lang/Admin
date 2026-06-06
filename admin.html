@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم العالمية | مطعم البركة</title>
+    <title>لوحة الإدارة الشاملة | مطعم البركة</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -22,7 +22,7 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--dark); }
+        body { font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--dark); padding-bottom: 50px; }
         .en-text { font-family: 'Poppins', sans-serif; }
 
         /* ================= Header ================= */
@@ -36,6 +36,7 @@
         
         /* ================= Layout ================= */
         .dashboard-container { max-width: 1400px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; }
+        .full-width { grid-column: 1 / -1; }
         @media (max-width: 900px) { .dashboard-container { grid-template-columns: 1fr; } }
 
         .card { background: var(--white); padding: 25px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
@@ -65,7 +66,7 @@
         .btn-save:disabled { background: var(--gray); cursor: not-allowed; transform: none; box-shadow: none; }
 
         /* ================= Orders View ================= */
-        .orders-container { max-height: 700px; overflow-y: auto; padding-right: 5px; }
+        .orders-container { max-height: 600px; overflow-y: auto; padding-right: 5px; }
         .orders-container::-webkit-scrollbar { width: 6px; }
         .orders-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
@@ -91,8 +92,27 @@
         .btn-deliver { background: var(--primary); color: white; padding: 10px 20px; width: auto; font-size: 14px; border-radius: 8px; }
         .btn-deliver:hover { background: var(--secondary); }
 
-        .empty-orders { text-align: center; padding: 50px 20px; color: var(--gray); }
-        .empty-orders i { font-size: 50px; color: #cbd5e1; margin-bottom: 15px; }
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--gray); }
+        .empty-state i { font-size: 50px; color: #cbd5e1; margin-bottom: 15px; }
+
+        /* ================= Menu Manager View ================= */
+        .menu-list-container { max-height: 400px; overflow-y: auto; padding-right: 5px; }
+        .menu-list-container::-webkit-scrollbar { width: 6px; }
+        .menu-list-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .menu-item-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #eee; border-radius: 10px; margin-bottom: 10px; background: var(--white); transition: var(--transition); }
+        .menu-item-row:hover { background: var(--bg); }
+        .menu-item-info { display: flex; align-items: center; gap: 15px; }
+        .menu-item-info img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #ddd; }
+        .menu-item-details h4 { font-size: 16px; margin-bottom: 2px; }
+        .menu-item-details span { font-size: 13px; color: var(--gray); }
+        
+        .menu-actions { display: flex; gap: 10px; }
+        .btn-action { border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: bold; font-size: 13px; transition: var(--transition); color: white; }
+        .btn-hide { background: var(--warning); }
+        .btn-show { background: var(--success); }
+        .btn-delete { background: var(--primary); }
+        .btn-action:hover { opacity: 0.8; transform: translateY(-2px); }
 
         /* ================= Toast Notification ================= */
         #toast {
@@ -109,15 +129,29 @@
 
     <header>
         <div class="logo">
-            <i class="fa-solid fa-utensils"></i> البركة <span style="font-weight: 400; color:#bdc3c7;">| لوحة الإدارة</span>
+            <i class="fa-solid fa-utensils"></i> البركة <span style="font-weight: 400; color:#bdc3c7;">| الإدارة</span>
         </div>
         <div style="display: flex; gap: 15px; align-items: center;">
-            <span style="font-size: 14px; color: #bdc3c7;"><i class="fa-solid fa-circle" style="color: var(--success); font-size: 10px; margin-left: 5px;"></i> متصل بقاعدة البيانات</span>
+            <span style="font-size: 14px; color: #bdc3c7;"><i class="fa-solid fa-circle" style="color: var(--success); font-size: 10px; margin-left: 5px;"></i> متصل (Realtime)</span>
         </div>
     </header>
 
     <div class="dashboard-container">
-        <!-- قسم إضافة وجبة -->
+        
+        <div class="card">
+            <div class="card-header">
+                <i class="fa-solid fa-bell-concierge" style="color: #fff; background: var(--dark);"></i>
+                <h2>طلبات العملاء <span id="ordersCount" style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 20px; font-size: 14px; margin-right: 10px;">0</span></h2>
+            </div>
+            
+            <div class="orders-container" id="orderGrid">
+                <div class="empty-state">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <p>جاري تحميل الطلبات...</p>
+                </div>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header">
                 <i class="fa-solid fa-folder-plus"></i>
@@ -148,7 +182,7 @@
             <div class="form-group">
                 <label>صورة الوجبة</label>
                 <input type="file" id="imageInput" class="form-control" accept="image/*" style="background: white;">
-                <small style="color: var(--gray); font-size: 12px; margin-top: 5px; display: block;">* يُفضل أن يكون حجم الصورة أقل من 1 ميجابايت لسرعة التحميل.</small>
+                <small style="color: var(--gray); font-size: 12px; margin-top: 5px; display: block;">* يُفضل أن يكون حجم الصورة أقل من 1 ميجابايت.</small>
             </div>
 
             <div class="offer-box">
@@ -170,30 +204,28 @@
             </button>
         </div>
 
-        <!-- قسم الطلبات المباشرة -->
-        <div class="card">
+        <div class="card full-width">
             <div class="card-header">
-                <i class="fa-solid fa-bell-concierge" style="color: #fff; background: var(--dark);"></i>
-                <h2>طلبات العملاء (مباشر) <span id="ordersCount" style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 20px; font-size: 14px; margin-right: 10px;">0</span></h2>
+                <i class="fa-solid fa-list-check"></i>
+                <h2>إدارة المنيو (التحكم في الوجبات)</h2>
             </div>
-            
-            <div class="orders-container" id="orderGrid">
-                <div class="empty-orders">
-                    <i class="fa-solid fa-box-open"></i>
-                    <p>جاري تحميل الطلبات...</p>
+            <div class="menu-list-container" id="menuListGrid">
+                <div class="empty-state">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <p>جاري تحميل المنيو...</p>
                 </div>
             </div>
         </div>
+
     </div>
 
-    <!-- الإشعارات -->
     <div id="toast"><i class="fa-solid fa-circle-check"></i> <span id="toastMsg">تمت العملية بنجاح!</span></div>
 
     <script type="module">
-        // استيراد Realtime Database
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, push, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
+        // إعدادات Firebase الخاصة بك
         const firebaseConfig = {
             apiKey: "AIzaSyDLOsW830rHo7viYDAUehbTkfmBLAiGCg8",
             authDomain: "haaaaa-7e537.firebaseapp.com",
@@ -223,7 +255,7 @@
             document.getElementById('offerFields').style.display = e.target.checked ? 'grid' : 'none';
         };
 
-        // حفظ وجبة جديدة (Realtime Database)
+        // ================= 1. إضافة وجبة جديدة =================
         window.saveItem = async () => {
             const title = document.getElementById('title').value.trim();
             const price = parseFloat(document.getElementById('price').value);
@@ -250,7 +282,7 @@
 
                 try {
                     const menuRef = ref(db, 'menu');
-                    const newItemRef = push(menuRef); // إنشاء ID جديد
+                    const newItemRef = push(menuRef);
 
                     await set(newItemRef, {
                         title: title,
@@ -260,12 +292,12 @@
                         isOffer: isOffer,
                         offerPrice: isOffer ? offerPrice : null,
                         offerExpiry: isOffer ? expiry.toISOString() : null,
-                        available: true
+                        available: true // الإتاحة الافتراضية
                     });
 
                     showToast("تمت إضافة الوجبة للمنيو بنجاح!");
                     
-                    // تصفير الحقول بعد الإضافة
+                    // تصفير الحقول
                     document.getElementById('title').value = '';
                     document.getElementById('price').value = '';
                     document.getElementById('imageInput').value = '';
@@ -281,7 +313,7 @@
             };
         };
 
-        // جلب وعرض الطلبات مباشرة (Realtime Database)
+        // ================= 2. إدارة الطلبات =================
         const ordersRef = ref(db, 'orders');
         onValue(ordersRef, (snapshot) => {
             const grid = document.getElementById('orderGrid');
@@ -291,7 +323,7 @@
             if (!ordersData) {
                 document.getElementById('ordersCount').innerText = "0";
                 grid.innerHTML = `
-                    <div class="empty-orders">
+                    <div class="empty-state">
                         <i class="fa-solid fa-mug-hot"></i>
                         <p>لا توجد طلبات جديدة حالياً.</p>
                     </div>`;
@@ -301,22 +333,16 @@
             const keys = Object.keys(ordersData);
             document.getElementById('ordersCount').innerText = keys.length;
 
-            // ترتيب الطلبات الأحدث أولاً (عكس المصفوفة)
             keys.reverse().forEach(key => {
                 const o = ordersData[key];
-                
-                // تنسيق الوقت
                 const orderDate = new Date(o.timestamp);
                 const timeString = orderDate.toLocaleTimeString('ar-EG', { hour: '2-digit', minute:'2-digit' });
 
-                // سرد الأطباق المطلوبة
                 let itemsListHtml = '';
                 if(o.items && Array.isArray(o.items)) {
                     o.items.forEach(item => {
                         itemsListHtml += `<li><span>${item.title}</span> <span class="en-text">${item.price} EGP</span></li>`;
                     });
-                } else {
-                    itemsListHtml = `<li><span style="color:#e74c3c">تفاصيل الطلب غير متوفرة</span></li>`;
                 }
 
                 grid.innerHTML += `
@@ -330,9 +356,7 @@
                             <div class="order-time"><i class="fa-regular fa-clock"></i> ${timeString}</div>
                         </div>
                         
-                        <div class="order-items">
-                            <ul>${itemsListHtml}</ul>
-                        </div>
+                        <div class="order-items"><ul>${itemsListHtml}</ul></div>
                         
                         <div class="order-footer">
                             <div class="order-total">الإجمالي: <span class="en-text">${o.totalPrice} EGP</span></div>
@@ -345,17 +369,69 @@
             });
         });
 
-        // دالة إنهاء الطلب (مسحه من الداتابيز أو أرشفته)
         window.markAsDelivered = async (orderId) => {
-            if(confirm("هل أنت متأكد من تسليم الطلب وإنهائه؟")) {
+            if(confirm("هل متأكد من إنهاء الطلب وتسليمه؟")) {
                 try {
                     await remove(ref(db, `orders/${orderId}`));
-                    showToast("تم إغلاق الطلب بنجاح!");
-                } catch(error) {
-                    showToast("حدث خطأ أثناء حذف الطلب.", true);
-                }
+                    showToast("تم إغلاق الطلب!");
+                } catch(error) { showToast("خطأ في حذف الطلب", true); }
             }
         };
+
+        // ================= 3. إدارة المنيو (إخفاء/إظهار/حذف) =================
+        const menuRef = ref(db, 'menu');
+        onValue(menuRef, (snapshot) => {
+            const listGrid = document.getElementById('menuListGrid');
+            const data = snapshot.val();
+            listGrid.innerHTML = '';
+
+            if (!data) {
+                listGrid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-plate-wheat"></i><p>المنيو فارغ حالياً.</p></div>`;
+                return;
+            }
+
+            Object.keys(data).forEach(key => {
+                const item = data[key];
+                const isAvailable = item.available !== false; // لو true أو مش موجودة معناها متاح
+
+                listGrid.innerHTML += `
+                    <div class="menu-item-row" style="opacity: ${isAvailable ? '1' : '0.6'};">
+                        <div class="menu-item-info">
+                            <img src="${item.image || 'https://via.placeholder.com/50'}" alt="">
+                            <div class="menu-item-details">
+                                <h4>${item.title}</h4>
+                                <span class="en-text">${item.price} EGP | ${item.category}</span>
+                            </div>
+                        </div>
+                        <div class="menu-actions">
+                            <button class="btn-action ${isAvailable ? 'btn-hide' : 'btn-show'}" onclick="toggleVisibility('${key}', ${isAvailable})">
+                                ${isAvailable ? '<i class="fa-solid fa-eye-slash"></i> إخفاء' : '<i class="fa-solid fa-eye"></i> إظهار'}
+                            </button>
+                            <button class="btn-action btn-delete" onclick="deleteMenuItem('${key}')">
+                                <i class="fa-solid fa-trash-can"></i> حذف
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+
+        window.toggleVisibility = async (id, currentStatus) => {
+            try {
+                await update(ref(db, `menu/${id}`), { available: !currentStatus });
+                showToast(currentStatus ? "تم إخفاء الوجبة مؤقتاً" : "تم إعادة إظهار الوجبة");
+            } catch(e) { showToast("خطأ في التحديث", true); }
+        };
+
+        window.deleteMenuItem = async (id) => {
+            if(confirm("هل أنت متأكد من حذف هذه الوجبة نهائياً من قاعدة البيانات؟ لا يمكن التراجع عن هذه الخطوة!")) {
+                try {
+                    await remove(ref(db, `menu/${id}`));
+                    showToast("تم الحذف بنجاح!");
+                } catch(e) { showToast("خطأ في الحذف", true); }
+            }
+        };
+
     </script>
 </body>
 </html>
